@@ -23,6 +23,8 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
 def get_db():
     """
     Dependency para obter sessão do banco de dados
@@ -32,11 +34,15 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
 def create_tables():
     """
     Criar todas as tabelas no banco
     """
     Base.metadata.create_all(bind=engine)
+
+
 def init_db():
     """
     Inicializar banco de dados com dados básicos

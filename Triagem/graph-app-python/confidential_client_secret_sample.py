@@ -54,7 +54,6 @@ FORMACAO_SYNONYMS = {
     ],
 }
 
-
 def make_session(max_retries: int) -> requests.Session:
     """Cria sessão HTTP com retry automático."""
     s = requests.Session()
@@ -73,7 +72,6 @@ def make_session(max_retries: int) -> requests.Session:
     s.mount("http://", adapter)
     return s
 
-
 def safe_print(msg: str):
     """Imprime mensagem com encoding seguro."""
     try:
@@ -82,7 +80,6 @@ def safe_print(msg: str):
         buffer_msg = (str(msg) + "\n").encode("utf-8", errors="replace")
         sys.stdout.buffer.write(buffer_msg)
         sys.stdout.flush()
-
 
 def normalize_text(s):
     """Normaliza texto removendo acentos e padronizando."""
@@ -93,7 +90,6 @@ def normalize_text(s):
     )
     s = re.sub(r'\s+', ' ', s).strip()
     return s
-
 
 def _normalize(s: str) -> str:
     """Normalização avançada de texto."""
@@ -108,19 +104,16 @@ def _normalize(s: str) -> str:
     s = re.sub(r'\s+', ' ', s).strip()
     return s
 
-
 def _has_exact_phrase(texto: str, frase: str) -> bool:
     """Verifica se frase exata existe no texto."""
     t = _normalize(texto)
     p = _normalize(frase)
     return re.search(r'\b' + re.escape(p) + r'\b', t) is not None
 
-
 def load_config(path: str) -> dict:
     """Carrega configuração do arquivo JSON."""
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
-
 
 def get_token(cfg: dict) -> str:
     """Obtém token de acesso da Microsoft."""
@@ -146,7 +139,6 @@ def get_token(cfg: dict) -> str:
         safe_print(error_msg)
         sys.exit(2)
     return result["access_token"]
-
 
 def fetch_messages(endpoint: str, token: str, timeout: int = 60,
                    max_retries: int = 5):
@@ -217,7 +209,6 @@ def fetch_messages(endpoint: str, token: str, timeout: int = 60,
                     raise
     return items
 
-
 def list_attachments(user_email, msg_id, token):
     """Lista anexos de uma mensagem."""
     base_url = "https://graph.microsoft.com/v1.0"
@@ -228,7 +219,6 @@ def list_attachments(user_email, msg_id, token):
         safe_print(f"[WARN] Falha ao listar anexos: {resp.text}")
         return []
     return resp.json().get("value", [])
-
 
 def mark_email_as_read(user_email, msg_id, token):
     """Marca um email como lido."""
@@ -252,7 +242,6 @@ def mark_email_as_read(user_email, msg_id, token):
     except Exception as e:
         safe_print(f"[WARN] Erro ao marcar como lido: {e}")
         return False
-
 
 def download_attachment(user_email, msg_id, att_id, token):
     """Baixa um anexo específico."""
@@ -284,7 +273,6 @@ def download_attachment(user_email, msg_id, att_id, token):
         return fname, data, ctype
     return None, None, None
 
-
 def safe_name(name: str, fallback_ext: str = "") -> str:
     """Cria nome de arquivo seguro."""
     illegal = r'[\\/:*?"<>|]'
@@ -302,7 +290,6 @@ def safe_name(name: str, fallback_ext: str = "") -> str:
         full = f"{base}_{h}.{ext}" if ext else f"{base}_{h}"
     return full
 
-
 def save_bytes(tmp_dir: Path, filename: str, data: bytes) -> Path:
     """Salva bytes em arquivo."""
     tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -310,7 +297,6 @@ def save_bytes(tmp_dir: Path, filename: str, data: bytes) -> Path:
     with open(path, "wb") as f:
         f.write(data)
     return path
-
 
 def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
     """Extrai texto de qualquer tipo de arquivo."""
@@ -382,7 +368,6 @@ def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
 
     return "", False
 
-
 def get_resume_text(path):
     """Extrai texto de arquivo de currículo."""
     path_l = path.lower()
@@ -401,7 +386,6 @@ def get_resume_text(path):
         safe_print(f"[WARN] Extensão não suportada para {path}")
         return ""
 
-
 def extract_text_from_pdf(path):
     """Extrai texto de PDF."""
     try:
@@ -412,7 +396,6 @@ def extract_text_from_pdf(path):
         safe_print(f"[WARN] Falha ao extrair texto de {path}")
         return ""
 
-
 def extract_text_from_docx(path):
     """Extrai texto de DOCX."""
     try:
@@ -422,7 +405,6 @@ def extract_text_from_docx(path):
     except Exception:
         safe_print(f"[WARN] Falha ao extrair texto de {path}")
         return ""
-
 
 def expand_formacoes(user_terms):
     """Expande termos de formação com sinônimos."""
@@ -435,7 +417,6 @@ def expand_formacoes(user_terms):
                 result.update([normalize_text(s) for s in syns])
     return result
 
-
 def has_formacao_in_text(cv_text, formacoes):
     """Verifica se formação está presente no texto."""
     cv_norm = normalize_text(cv_text)
@@ -444,7 +425,6 @@ def has_formacao_in_text(cv_text, formacoes):
         if term in cv_norm:
             return True
     return False
-
 
 def candidato_aprovado(texto_cv, palavras, formacoes):
     """Determina se candidato deve ser aprovado."""
@@ -464,7 +444,6 @@ def candidato_aprovado(texto_cv, palavras, formacoes):
             return False, formacoes_encontradas
 
     return True, formacoes_encontradas
-
 
 def teste_formacao():
     """Teste das funcionalidades de formação."""
@@ -486,7 +465,6 @@ def teste_formacao():
                 ', '.join(encontrados) if encontrados else 'nenhuma'
             )
             safe_print(f"CV {i}: {status} | Encontradas: {encontradas_str}")
-
 
 def main():
     """Função principal."""
@@ -670,6 +648,6 @@ def main():
     safe_print("[END] triagem ok")
     sys.exit(0)
 
-
 if __name__ == "__main__":
     main()
+

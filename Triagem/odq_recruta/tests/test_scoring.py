@@ -22,3 +22,4 @@ def test_score_semantico():
     text = "Python developer with experience"
     result = compute_score(text, job)
     assert result["semantico"] >= 0
+

@@ -29,3 +29,4 @@ class JobSpec:
     required_keywords: List[str]
     desired_keywords: Optional[List[str]]
     threshold: int
+

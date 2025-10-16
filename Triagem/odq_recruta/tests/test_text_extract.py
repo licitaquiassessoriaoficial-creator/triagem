@@ -15,3 +15,4 @@ def test_extract_docx(monkeypatch):
         paragraphs = [type("p", (), {"text": "conteudo docx"})()]
     monkeypatch.setattr("docx.Document", lambda path: FakeDoc())
     assert extract_text(Path("arquivo.docx")) == "conteudo docx"
+

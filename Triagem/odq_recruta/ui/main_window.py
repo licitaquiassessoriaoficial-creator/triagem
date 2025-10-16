@@ -94,8 +94,6 @@ class MainWindow:
             self.entry_outdir.delete(0, tk.END)
             self.entry_outdir.insert(0, dirname)
 
-
-
     def update_logs(self, msg):
         self.txt_logs.config(state="normal")
         self.txt_logs.insert(tk.END, msg + "\n")
@@ -207,3 +205,4 @@ def main():
     app = MainWindow(root)
     app.poll_log_queue()
     root.mainloop()
+

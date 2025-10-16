@@ -42,3 +42,4 @@ class GmailIMAPClient:
                         "received_at": msg.get("Date")
                     })
         return results
+

@@ -32,3 +32,4 @@ def export_json(aprovados: list[CandidateResult], path: Path):
         })
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+

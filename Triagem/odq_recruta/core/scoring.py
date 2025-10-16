@@ -14,7 +14,6 @@ def tokenize(text: str) -> List[str]:
     text = re.sub(r"[\p{P}\p{S}]", "", text)
     return text.split()
 
-
 def compute_score(text: str, job: JobSpec) -> Dict:
     tokens = tokenize(text)
     req = sum(kw.lower() in tokens for kw in job.required_keywords)
@@ -32,3 +31,4 @@ def compute_score(text: str, job: JobSpec) -> Dict:
         "semantico": int(sem_score),
         "score_total": total
     }
+

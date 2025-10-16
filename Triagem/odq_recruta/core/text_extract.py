@@ -31,3 +31,4 @@ def extract_text(path: Path) -> Optional[str]:
         except Exception:
             return None
     return None
+

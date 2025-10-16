@@ -122,3 +122,4 @@ class Pipeline:
 
     def stop(self):
         self.stop_event.set()
+

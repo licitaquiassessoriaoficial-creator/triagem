@@ -15,3 +15,4 @@ def test_cache(tmp_path):
     save_hash_cache(hashes)
     loaded = load_hash_cache()
     assert hashes == loaded
+

@@ -18,3 +18,4 @@ def setup_logging(log_dir: Path = Path("logs")):
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
     return logger
+

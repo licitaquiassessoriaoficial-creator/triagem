@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-
 GMAIL_ENV_VARS = ["GMAIL_USERNAME", "GMAIL_APP_PASSWORD"]
 M365_ENV_VARS = ["MS_CLIENT_ID", "MS_TENANT_ID", "MS_REDIRECT_URI", "MS_SCOPES"]
 
@@ -23,3 +22,4 @@ def load_and_validate_env(env_path: Path = Path(".env"), use_gmail: bool = False
     # Adiciona todas as variáveis (mesmo as não obrigatórias) para uso posterior
     config.update({var: os.getenv(var) for var in set(GMAIL_ENV_VARS + M365_ENV_VARS) if var not in config})
     return config
+

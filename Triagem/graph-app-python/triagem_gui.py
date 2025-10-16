@@ -9,7 +9,6 @@ import re
 import threading
 import sys
 
-
 class TriagemApp(tk.Tk):
     """Aplicação principal de triagem de currículos."""
 
@@ -263,7 +262,7 @@ class TriagemApp(tk.Tk):
             info_msg = "Nenhuma pasta de aprovados encontrada."
             messagebox.showinfo("Info", info_msg)
 
-
 if __name__ == "__main__":
     app = TriagemApp()
     app.mainloop()
+

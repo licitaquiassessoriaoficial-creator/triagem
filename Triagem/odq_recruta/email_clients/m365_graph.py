@@ -91,3 +91,4 @@ class M365GraphClient:
                             "received_at": msg["receivedDateTime"]
                         })
         return results
+
