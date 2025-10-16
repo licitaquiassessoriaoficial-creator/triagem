@@ -31,7 +31,8 @@ def load_and_validate_env(
     missing = [k for k, v in config.items() if not v]
     if missing:
         raise ValueError(f"Variáveis ausentes no .env: {', '.join(missing)}")
-    # Adiciona todas as variáveis (mesmo as não obrigatórias) para uso posterior
+    # Adiciona todas as variáveis (mesmo as não obrigatórias) para uso
+    # posterior
     config.update(
         {
             var: os.getenv(var)

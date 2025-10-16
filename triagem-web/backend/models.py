@@ -10,7 +10,11 @@ from sqlalchemy import (
     Column,
     DateTime,
 )
+
+
 from sqlalchemy import Enum as SQLEnum
+
+
 from sqlalchemy import (
     Float,
     ForeignKey,
@@ -18,8 +22,14 @@ from sqlalchemy import (
     String,
     Text,
 )
+
+
 from sqlalchemy.ext.declarative import declarative_base
+
+
 from sqlalchemy.orm import relationship
+
+
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -34,6 +44,7 @@ class JobStatus(enum.Enum):
 
 
 class EmailProvider(enum.Enum):
+
     GMAIL = "gmail"
     M365 = "m365"
 
@@ -77,6 +88,7 @@ class TriagemJob(Base):
     experience_weight = Column(Float, default=0.3)  # Peso da experiência
     formation_weight = Column(Float, default=0.2)  # Peso da formação
     language_weight = Column(Float, default=0.1)  # Peso dos idiomas
+
     # Metadados de execução
     total_candidates = Column(Integer, default=0)
     processed_candidates = Column(Integer, default=0)
@@ -114,6 +126,7 @@ class CandidateResult(Base):
     formation_score = Column(Float, default=0.0)
     language_score = Column(Float, default=0.0)
     total_score = Column(Float, default=0.0)
+
     # Detalhamento da análise
     found_skills = Column(JSON)  # Habilidades encontradas
     experience_years = Column(Integer)

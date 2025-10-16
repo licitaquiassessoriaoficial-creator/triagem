@@ -3,13 +3,13 @@ Serviço de Autenticação
 Gerencia tokens JWT e autenticação de usuários
 """
 
+import hashlib
 import os
 from datetime import datetime, timedelta
 from typing import Optional
 
 import jwt
 from fastapi import HTTPException, status
-from passlib.context import CryptContext
 
 
 class AuthService:
@@ -19,7 +19,6 @@ class AuthService:
         self.secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key-here")
         self.algorithm = "HS256"
         self.access_token_expire_minutes = 30
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def create_access_token(
         self, data: dict, expires_delta: Optional[timedelta] = None
@@ -60,9 +59,10 @@ class AuthService:
     def verify_password(
         self, plain_password: str, hashed_password: str
     ) -> bool:
-        """Verificar senha"""
-        return self.pwd_context.verify(plain_password, hashed_password)
+        """Verificar senha usando hash simples"""
+        plain_hash = hashlib.sha256(plain_password.encode()).hexdigest()
+        return plain_hash == hashed_password
 
     def get_password_hash(self, password: str) -> str:
-        """Hash da senha"""
-        return self.pwd_context.hash(password)
+        """Hash da senha usando SHA256"""
+        return hashlib.sha256(password.encode()).hexdigest()

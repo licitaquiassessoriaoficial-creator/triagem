@@ -62,7 +62,8 @@ class M365GraphClient:
                 print("[MSAL ERROR] Token response:")
                 print(json.dumps(self.token, indent=2, ensure_ascii=False))
                 raise Exception(
-                    f"Falha na autenticação MSAL (Client Credentials Flow): {self.token}"
+                    f"Falha na autenticação MSAL (Client Credentials Flow): {
+                        self.token}"
                 )
             persist_cache()
         else:
@@ -77,7 +78,9 @@ class M365GraphClient:
                 if "user_code" not in flow:
                     raise Exception("Falha ao iniciar Device Flow")
                 print(
-                    f"Acesse {flow['verification_uri']} e insira o código: {flow['user_code']}"
+                    f"Acesse {
+                        flow['verification_uri']} e insira o código: {
+                        flow['user_code']}"
                 )
                 self.token = self.app.acquire_token_by_device_flow(flow)
             if not self.token or "access_token" not in self.token:
@@ -92,7 +95,8 @@ class M365GraphClient:
         results = []
         for msg in resp.json().get("value", []):
             if msg.get("hasAttachments"):
-                att_url = f"https://graph.microsoft.com/v1.0/me/messages/{msg['id']}/attachments"
+                att_url = f"https://graph.microsoft.com/v1.0/me/messages/{
+                    msg['id']}/attachments"
                 att_resp = requests.get(att_url, headers=headers)
                 att_resp.raise_for_status()
                 for att in att_resp.json().get("value", []):
