@@ -1,9 +1,11 @@
 """
 Dataclasses principais: Attachment, CandidateResult, JobSpec
 """
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
+
 
 @dataclass
 class Attachment:
@@ -15,12 +17,14 @@ class Attachment:
     path: Path
     received_at: str
 
+
 @dataclass
 class CandidateResult:
     attachment: Attachment
     score: int
     approved: bool
     extracted_text: Optional[str] = None
+
 
 @dataclass
 class JobSpec:
@@ -29,4 +33,3 @@ class JobSpec:
     required_keywords: List[str]
     desired_keywords: Optional[List[str]]
     threshold: int
-

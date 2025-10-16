@@ -1,8 +1,10 @@
 """
 Testes para hashing.sha256_bytes e cache
 """
+
 import pytest
-from core.hashing import sha256_bytes, load_hash_cache, save_hash_cache
+from core.hashing import load_hash_cache, save_hash_cache, sha256_bytes
+
 
 def test_sha256_bytes():
     data = b"teste"
@@ -10,9 +12,9 @@ def test_sha256_bytes():
     assert len(h) == 64
     assert isinstance(h, str)
 
+
 def test_cache(tmp_path):
     hashes = {"abc", "def"}
     save_hash_cache(hashes)
     loaded = load_hash_cache()
     assert hashes == loaded
-

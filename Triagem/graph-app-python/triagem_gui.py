@@ -1,13 +1,14 @@
 """Interface gráfica para triagem de currículos - Microsoft 365."""
 
+import json
+import os
+import re
+import subprocess
+import sys
+import threading
 import tkinter as tk
 from tkinter import messagebox
-import subprocess
-import os
-import json
-import re
-import threading
-import sys
+
 
 class TriagemApp(tk.Tk):
     """Aplicação principal de triagem de currículos."""
@@ -41,8 +42,7 @@ class TriagemApp(tk.Tk):
         config_label = "Arquivo de configuração: parameters.json (fixo)"
         tk.Label(self, text=config_label).pack(pady=5)
         config_entry = tk.Entry(
-            self, textvariable=self.config_path,
-            width=50, state='disabled'
+            self, textvariable=self.config_path, width=50, state="disabled"
         )
         config_entry.pack(pady=2)
 
@@ -83,22 +83,24 @@ class TriagemApp(tk.Tk):
         triagem_btn.pack(pady=10)
 
         aprovados_btn = tk.Button(
-            self, text="Abrir pasta de aprovados",
-            command=self.open_aprovados
+            self, text="Abrir pasta de aprovados", command=self.open_aprovados
         )
         aprovados_btn.pack(pady=2)
 
         # Log
         frame = tk.Frame(self)
-        frame.pack(pady=10, fill='both', expand=True)
+        frame.pack(pady=10, fill="both", expand=True)
         log_params = {
-            'height': 10, 'width': 60, 'state': 'disabled', 'wrap': 'word'
+            "height": 10,
+            "width": 60,
+            "state": "disabled",
+            "wrap": "word",
         }
         self.log_text = tk.Text(frame, **log_params)
-        self.log_text.pack(side='left', fill='both', expand=True)
+        self.log_text.pack(side="left", fill="both", expand=True)
         scrollbar = tk.Scrollbar(frame, command=self.log_text.yview)
-        scrollbar.pack(side='right', fill='y')
-        self.log_text['yscrollcommand'] = scrollbar.set
+        scrollbar.pack(side="right", fill="y")
+        self.log_text["yscrollcommand"] = scrollbar.set
 
     def run_triagem(self):
         """Executa o processo de triagem."""
@@ -169,8 +171,12 @@ class TriagemApp(tk.Tk):
 
         # Executar triagem
         self._execute_triagem(
-            temp_config, vaga_desc, keywords, negativas_str,
-            formacoes_str, script_dir
+            temp_config,
+            vaga_desc,
+            keywords,
+            negativas_str,
+            formacoes_str,
+            script_dir,
         )
 
     def _format_date(self, date_str):
@@ -183,9 +189,17 @@ class TriagemApp(tk.Tk):
             return date_str
         return None
 
-    def _execute_triagem(self, temp_config, vaga_desc, keywords,
-                         negativas_str, formacoes_str, script_dir):
+    def _execute_triagem(
+        self,
+        temp_config,
+        vaga_desc,
+        keywords,
+        negativas_str,
+        formacoes_str,
+        script_dir,
+    ):
         """Executa o processo de triagem em thread separada."""
+
         def log(msg):
             self.log_text.config(state="normal")
             self.log_text.insert("end", msg + "\\n")
@@ -199,9 +213,15 @@ class TriagemApp(tk.Tk):
 
             script_path = "confidential_client_secret_sample.py"
             args = [
-                sys.executable, "-u", script_path, temp_config,
-                vaga_desc, keywords, negativas_str,
-                "--formacoes", formacoes_str
+                sys.executable,
+                "-u",
+                script_path,
+                temp_config,
+                vaga_desc,
+                keywords,
+                negativas_str,
+                "--formacoes",
+                formacoes_str,
             ]
 
             log(f'Comando: {" ".join(args)}')
@@ -216,9 +236,13 @@ class TriagemApp(tk.Tk):
 
             try:
                 proc = subprocess.Popen(
-                    args, cwd=script_dir, stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT, encoding="utf-8",
-                    bufsize=1, env=env
+                    args,
+                    cwd=script_dir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    encoding="utf-8",
+                    bufsize=1,
+                    env=env,
                 )
 
                 for line in iter(proc.stdout.readline, ""):
@@ -262,7 +286,7 @@ class TriagemApp(tk.Tk):
             info_msg = "Nenhuma pasta de aprovados encontrada."
             messagebox.showinfo("Info", info_msg)
 
+
 if __name__ == "__main__":
     app = TriagemApp()
     app.mainloop()
-

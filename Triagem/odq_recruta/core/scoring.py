@@ -1,18 +1,22 @@
 """
 Cálculo de score para currículos
 """
-from typing import List, Dict
-from core.models import JobSpec
+
 import re
+from typing import Dict, List
+
+from core.models import JobSpec
 from rapidfuzz import fuzz
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
 
 def tokenize(text: str) -> List[str]:
     text = text.lower()
     text = re.sub(r"[\r\n\t]", " ", text)
     text = re.sub(r"[\p{P}\p{S}]", "", text)
     return text.split()
+
 
 def compute_score(text: str, job: JobSpec) -> Dict:
     tokens = tokenize(text)
@@ -29,6 +33,5 @@ def compute_score(text: str, job: JobSpec) -> Dict:
         "essenciais": req_score,
         "desejaveis": des_score,
         "semantico": int(sem_score),
-        "score_total": total
+        "score_total": total,
     }
-

@@ -1,15 +1,26 @@
 """
 Cliente Microsoft 365 Graph API com MSAL
 """
-import msal
-import requests
+
+import os
 from pathlib import Path
 from typing import List
+
+import msal
+import requests
 from core.hashing import sha256_bytes
-import os
+
 
 class M365GraphClient:
-    def __init__(self, client_id: str, tenant_id: str, redirect_uri: str, scopes: list, token_cache_path: Path, client_secret: str = None):
+    def __init__(
+        self,
+        client_id: str,
+        tenant_id: str,
+        redirect_uri: str,
+        scopes: list,
+        token_cache_path: Path,
+        client_secret: str = None,
+    ):
         self.client_id = client_id
         self.tenant_id = tenant_id
         self.redirect_uri = redirect_uri
@@ -28,38 +39,46 @@ class M365GraphClient:
                 client_id,
                 authority=f"https://login.microsoftonline.com/{tenant_id}",
                 client_credential=client_secret,
-                token_cache=self.token_cache
+                token_cache=self.token_cache,
             )
         else:
             self.app = msal.PublicClientApplication(
                 client_id,
                 authority=f"https://login.microsoftonline.com/{tenant_id}",
-                token_cache=self.token_cache
+                token_cache=self.token_cache,
             )
 
     def authenticate(self):
         def persist_cache():
             self.token_cache_path.parent.mkdir(exist_ok=True)
             self.token_cache_path.write_text(self.token_cache.serialize())
+
         if self.client_secret:
             # Client Credentials Flow (Application permissions)
             self.token = self.app.acquire_token_for_client(scopes=self.scopes)
             if not self.token or "access_token" not in self.token:
                 import json
+
                 print("[MSAL ERROR] Token response:")
                 print(json.dumps(self.token, indent=2, ensure_ascii=False))
-                raise Exception(f"Falha na autenticação MSAL (Client Credentials Flow): {self.token}")
+                raise Exception(
+                    f"Falha na autenticação MSAL (Client Credentials Flow): {self.token}"
+                )
             persist_cache()
         else:
             # Device Code Flow
             accounts = self.app.get_accounts()
             if accounts:
-                self.token = self.app.acquire_token_silent(self.scopes, account=accounts[0])
+                self.token = self.app.acquire_token_silent(
+                    self.scopes, account=accounts[0]
+                )
             if not self.token:
                 flow = self.app.initiate_device_flow(scopes=self.scopes)
                 if "user_code" not in flow:
                     raise Exception("Falha ao iniciar Device Flow")
-                print(f"Acesse {flow['verification_uri']} e insira o código: {flow['user_code']}")
+                print(
+                    f"Acesse {flow['verification_uri']} e insira o código: {flow['user_code']}"
+                )
                 self.token = self.app.acquire_token_by_device_flow(flow)
             if not self.token or "access_token" not in self.token:
                 raise Exception("Falha na autenticação MSAL")
@@ -78,17 +97,22 @@ class M365GraphClient:
                 att_resp.raise_for_status()
                 for att in att_resp.json().get("value", []):
                     fname = att.get("name")
-                    if fname and fname.lower().endswith((".pdf", ".doc", ".docx")):
+                    if fname and fname.lower().endswith(
+                        (".pdf", ".doc", ".docx")
+                    ):
                         payload = bytes(att["contentBytes"], "utf-8")
                         hash = sha256_bytes(payload)
-                        results.append({
-                            "email_id": msg["id"],
-                            "filename": fname,
-                            "payload": payload,
-                            "hash": hash,
-                            "sender": msg["from"]["emailAddress"]["address"],
-                            "subject": msg["subject"],
-                            "received_at": msg["receivedDateTime"]
-                        })
+                        results.append(
+                            {
+                                "email_id": msg["id"],
+                                "filename": fname,
+                                "payload": payload,
+                                "hash": hash,
+                                "sender": msg["from"]["emailAddress"][
+                                    "address"
+                                ],
+                                "subject": msg["subject"],
+                                "received_at": msg["receivedDateTime"],
+                            }
+                        )
         return results
-

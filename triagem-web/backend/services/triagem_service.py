@@ -1,32 +1,34 @@
 """
 Serviço principal para processamento de triagem de currículos
 """
+
 import asyncio
 import hashlib
 import json
 import logging
 from datetime import datetime
-from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import and_
-from models import (
-    TriagemJob, CandidateResult, JobStatus,
-    EmailProvider
-)
+from typing import Any, Dict, List, Optional
+
+from models import CandidateResult, EmailProvider, JobStatus, TriagemJob
 from schemas import TriagemJobCreate
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
 class TriagemService:
     """
     Serviço principal para gerenciamento de triagens
     """
+
     def __init__(self, db: Session):
         self.db = db
+
     async def create_job(
-        self,
-        job_data: TriagemJobCreate,
-        user_id: int
+        self, job_data: TriagemJobCreate, user_id: int
     ) -> TriagemJob:
         """
         Criar nova triagem
@@ -48,35 +50,39 @@ class TriagemService:
             experience_weight=job_data.experience_weight,
             formation_weight=job_data.formation_weight,
             language_weight=job_data.language_weight,
-            status=JobStatus.PENDING
+            status=JobStatus.PENDING,
         )
         self.db.add(job)
         self.db.commit()
         self.db.refresh(job)
         logger.info(f"Nova triagem criada: {job.id} - {job.name}")
         return job
+
     async def get_user_jobs(self, user_id: int) -> List[TriagemJob]:
         """
         Listar todas as triagens do usuário
         """
-        return self.db.query(TriagemJob).filter(
-            TriagemJob.user_id == user_id
-        ).order_by(TriagemJob.created_at.desc()).all()
+        return (
+            self.db.query(TriagemJob)
+            .filter(TriagemJob.user_id == user_id)
+            .order_by(TriagemJob.created_at.desc())
+            .all()
+        )
+
     async def get_job(self, job_id: int, user_id: int) -> Optional[TriagemJob]:
         """
         Obter triagem específica do usuário
         """
-        return self.db.query(TriagemJob).filter(
-            and_(
-                TriagemJob.id == job_id,
-                TriagemJob.user_id == user_id
+        return (
+            self.db.query(TriagemJob)
+            .filter(
+                and_(TriagemJob.id == job_id, TriagemJob.user_id == user_id)
             )
-        ).first()
+            .first()
+        )
+
     async def get_job_results(
-        self,
-        job_id: int,
-        user_id: int,
-        approved_only: bool = False
+        self, job_id: int, user_id: int, approved_only: bool = False
     ) -> List[CandidateResult]:
         """
         Obter resultados de uma triagem
@@ -90,9 +96,8 @@ class TriagemService:
         )
         if approved_only:
             query = query.filter(CandidateResult.is_approved is True)
-        return query.order_by(
-            CandidateResult.total_score.desc()
-        ).all()
+        return query.order_by(CandidateResult.total_score.desc()).all()
+
     async def stop_job(self, job_id: int, user_id: int) -> bool:
         """
         Parar execução de uma triagem
@@ -107,17 +112,12 @@ class TriagemService:
             logger.info(f"Triagem {job_id} parada pelo usuário")
             return True
         return False
-    async def process_triagem(
-        self,
-        job_id: int,
-        job_data: TriagemJobCreate
-    ):
+
+    async def process_triagem(self, job_id: int, job_data: TriagemJobCreate):
         """
         Processar triagem em background
         """
-        job = self.db.query(TriagemJob).filter(
-            TriagemJob.id == job_id
-        ).first()
+        job = self.db.query(TriagemJob).filter(TriagemJob.id == job_id).first()
         if not job:
             logger.error(f"Job {job_id} não encontrado")
             return
@@ -143,6 +143,7 @@ class TriagemService:
             job.error_message = str(e)
             job.completed_at = datetime.utcnow()
             self.db.commit()
+
     async def _fetch_candidates(self, job: TriagemJob) -> List[Dict]:
         """
         Buscar candidatos via email
@@ -160,6 +161,7 @@ class TriagemService:
         except Exception as e:
             logger.error(f"Erro ao buscar candidatos: {str(e)}")
             raise
+
     async def _fetch_gmail_candidates(self, job: TriagemJob) -> List[Dict]:
         """
         Buscar candidatos via Gmail IMAP
@@ -171,15 +173,16 @@ class TriagemService:
                 "name": "João Silva",
                 "email": "joao@email.com",
                 "resume_text": "Experiência em Python, Django...",
-                "resume_filename": "joao_cv.pdf"
+                "resume_filename": "joao_cv.pdf",
             },
             {
                 "name": "Maria Santos",
                 "email": "maria@email.com",
                 "resume_text": "Desenvolvedora Full Stack...",
-                "resume_filename": "maria_cv.pdf"
-            }
+                "resume_filename": "maria_cv.pdf",
+            },
         ]
+
     async def _fetch_m365_candidates(self, job: TriagemJob) -> List[Dict]:
         """
         Buscar candidatos via Microsoft 365 Graph API
@@ -191,13 +194,12 @@ class TriagemService:
                 "name": "Pedro Costa",
                 "email": "pedro@email.com",
                 "resume_text": "Especialista em React, Node.js...",
-                "resume_filename": "pedro_cv.pdf"
+                "resume_filename": "pedro_cv.pdf",
             }
         ]
+
     async def _process_candidates(
-        self,
-        job: TriagemJob,
-        candidates: List[Dict]
+        self, job: TriagemJob, candidates: List[Dict]
     ):
         """
         Processar lista de candidatos
@@ -210,21 +212,25 @@ class TriagemService:
                 resume_hash = hashlib.md5(
                     candidate_data["resume_text"].encode()
                 ).hexdigest()
-                existing = self.db.query(CandidateResult).filter(
-                    and_(
-                        CandidateResult.job_id == job.id,
-                        CandidateResult.resume_hash == resume_hash
+                existing = (
+                    self.db.query(CandidateResult)
+                    .filter(
+                        and_(
+                            CandidateResult.job_id == job.id,
+                            CandidateResult.resume_hash == resume_hash,
+                        )
                     )
-                ).first()
+                    .first()
+                )
                 if existing:
                     logger.info(
-                        f"Candidato já processado: {candidate_data['email']}"
+                        f"Candidato já processado: {
+                            candidate_data['email']}"
                     )
                     continue
                 # Análise do currículo
                 analysis = await self._analyze_resume(
-                    candidate_data["resume_text"],
-                    job
+                    candidate_data["resume_text"], job
                 )
                 # Criar resultado
                 result = CandidateResult(
@@ -243,7 +249,7 @@ class TriagemService:
                     experience_years=analysis["experience_years"],
                     found_formations=analysis["found_formations"],
                     found_languages=analysis["found_languages"],
-                    is_approved=analysis["total_score"] >= 70.0
+                    is_approved=analysis["total_score"] >= 70.0,
                 )
                 self.db.add(result)
                 processed += 1
@@ -265,10 +271,9 @@ class TriagemService:
                     f"{candidate_data.get('email')}: {str(e)}"
                 )
                 continue
+
     async def _analyze_resume(
-        self,
-        resume_text: str,
-        job: TriagemJob
+        self, resume_text: str, job: TriagemJob
     ) -> Dict[str, Any]:
         """
         Analisar currículo e calcular pontuação
@@ -296,10 +301,10 @@ class TriagemService:
         language_score = 50.0  # Score padrão
         # Calcular score total ponderado
         total_score = (
-            skill_score * job.skill_weight +
-            exp_score * job.experience_weight +
-            formation_score * job.formation_weight +
-            language_score * job.language_weight
+            skill_score * job.skill_weight
+            + exp_score * job.experience_weight
+            + formation_score * job.formation_weight
+            + language_score * job.language_weight
         )
         return {
             "skill_score": skill_score,
@@ -310,66 +315,76 @@ class TriagemService:
             "found_skills": found_skills,
             "experience_years": experience_years,
             "found_formations": found_formations,
-            "found_languages": found_languages
+            "found_languages": found_languages,
         }
+
     def _extract_experience_years(self, resume_text: str) -> int:
         """
         Extrair anos de experiência do currículo (implementação básica)
         """
         import re
+
         # Buscar por padrões como "5 anos", "3 years", etc.
         patterns = [
-            r'(\d+)\s*anos?\s*de\s*experiência',
-            r'(\d+)\s*years?\s*of\s*experience',
-            r'experiência.*?(\d+)\s*anos?',
-            r'experience.*?(\d+)\s*years?'
+            r"(\d+)\s*anos?\s*de\s*experiência",
+            r"(\d+)\s*years?\s*of\s*experience",
+            r"experiência.*?(\d+)\s*anos?",
+            r"experience.*?(\d+)\s*years?",
         ]
         for pattern in patterns:
             matches = re.findall(pattern, resume_text.lower())
             if matches:
                 return max([int(match) for match in matches])
         return 1  # Experiência mínima padrão
+
     async def export_results(
-        self,
-        job_id: int,
-        user_id: int,
-        format: str
+        self, job_id: int, user_id: int, format: str
     ) -> str:
         """
         Exportar resultados da triagem
         """
         results = await self.get_job_results(job_id, user_id)
         if format == "json":
-            return json.dumps([
-                {
-                    "name": r.name,
-                    "email": r.email,
-                    "total_score": r.total_score,
-                    "is_approved": r.is_approved,
-                    "found_skills": r.found_skills
-                }
-                for r in results
-            ], indent=2)
+            return json.dumps(
+                [
+                    {
+                        "name": r.name,
+                        "email": r.email,
+                        "total_score": r.total_score,
+                        "is_approved": r.is_approved,
+                        "found_skills": r.found_skills,
+                    }
+                    for r in results
+                ],
+                indent=2,
+            )
         elif format == "csv":
             import csv
             import io
+
             output = io.StringIO()
             writer = csv.writer(output)
             # Headers
-            writer.writerow([
-                "Nome", "Email", "Score Total", "Aprovado",
-                "Habilidades Encontradas"
-            ])
+            writer.writerow(
+                [
+                    "Nome",
+                    "Email",
+                    "Score Total",
+                    "Aprovado",
+                    "Habilidades Encontradas",
+                ]
+            )
             # Data
             for r in results:
-                writer.writerow([
-                    r.name or "",
-                    r.email,
-                    f"{r.total_score:.1f}",
-                    "Sim" if r.is_approved else "Não",
-                    ", ".join(r.found_skills)
-                ])
+                writer.writerow(
+                    [
+                        r.name or "",
+                        r.email,
+                        f"{r.total_score:.1f}",
+                        "Sim" if r.is_approved else "Não",
+                        ", ".join(r.found_skills),
+                    ]
+                )
             return output.getvalue()
         else:
             raise ValueError(f"Formato não suportado: {format}")
-

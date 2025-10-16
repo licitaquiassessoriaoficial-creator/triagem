@@ -1,11 +1,14 @@
 """
 Cliente IMAP para Gmail com App Password
 """
-import imaplib
+
 import email
+import imaplib
 from pathlib import Path
 from typing import List
+
 from core.hashing import sha256_bytes
+
 
 class GmailIMAPClient:
     def __init__(self, username: str, app_password: str):
@@ -29,17 +32,20 @@ class GmailIMAPClient:
                 if part.get_content_maintype() == "multipart":
                     continue
                 filename = part.get_filename()
-                if filename and filename.lower().endswith((".pdf", ".doc", ".docx")):
+                if filename and filename.lower().endswith(
+                    (".pdf", ".doc", ".docx")
+                ):
                     payload = part.get_payload(decode=True)
                     hash = sha256_bytes(payload)
-                    results.append({
-                        "email_id": eid.decode(),
-                        "filename": filename,
-                        "payload": payload,
-                        "hash": hash,
-                        "sender": msg.get("From"),
-                        "subject": msg.get("Subject"),
-                        "received_at": msg.get("Date")
-                    })
+                    results.append(
+                        {
+                            "email_id": eid.decode(),
+                            "filename": filename,
+                            "payload": payload,
+                            "hash": hash,
+                            "sender": msg.get("From"),
+                            "subject": msg.get("Subject"),
+                            "received_at": msg.get("Date"),
+                        }
+                    )
         return results
-

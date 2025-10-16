@@ -26,9 +26,10 @@ if hasattr(sys.stdout, "reconfigure"):
 
 # OCR opcional
 try:
-    from pdf2image import convert_from_bytes
     import pytesseract
+    from pdf2image import convert_from_bytes
     from PIL import Image
+
     HAVE_OCR = True
 except Exception:
     convert_from_bytes = None
@@ -40,19 +41,35 @@ OCR_LANG = "por+eng"
 MIN_TEXT_CHARS = 80
 
 UNSUPPORTED_EXT = (
-    ".zip", ".rar", ".7z", ".msg", ".eml",
-    ".xls", ".xlsx", ".ppt", ".pptx"
+    ".zip",
+    ".rar",
+    ".7z",
+    ".msg",
+    ".eml",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
 )
 
 FORMACAO_SYNONYMS = {
     "farmacia": [
-        "farmacia", "farmácia", "farmaceutico", "farmacêutico", "pharmacy"
+        "farmacia",
+        "farmácia",
+        "farmaceutico",
+        "farmacêutico",
+        "pharmacy",
     ],
     "biomedicina": ["biomedicina", "biomédico", "biomédica"],
     "quimica": [
-        "quimica", "química", "quimico", "química industrial", "chemistry"
+        "quimica",
+        "química",
+        "quimico",
+        "química industrial",
+        "chemistry",
     ],
 }
+
 
 def make_session(max_retries: int) -> requests.Session:
     """Cria sessão HTTP com retry automático."""
@@ -72,6 +89,7 @@ def make_session(max_retries: int) -> requests.Session:
     s.mount("http://", adapter)
     return s
 
+
 def safe_print(msg: str):
     """Imprime mensagem com encoding seguro."""
     try:
@@ -81,39 +99,46 @@ def safe_print(msg: str):
         sys.stdout.buffer.write(buffer_msg)
         sys.stdout.flush()
 
+
 def normalize_text(s):
     """Normaliza texto removendo acentos e padronizando."""
     s = s.lower()
-    s = ''.join(
-        c for c in unicodedata.normalize('NFD', s)
-        if unicodedata.category(c) != 'Mn'
+    s = "".join(
+        c
+        for c in unicodedata.normalize("NFD", s)
+        if unicodedata.category(c) != "Mn"
     )
-    s = re.sub(r'\s+', ' ', s).strip()
+    s = re.sub(r"\s+", " ", s).strip()
     return s
+
 
 def _normalize(s: str) -> str:
     """Normalização avançada de texto."""
-    soft_hyphen = "\u00AD"
+    soft_hyphen = "\u00ad"
     s = s.replace(soft_hyphen, "")
-    s = re.sub(r'(?<=\w)-\s+(?=\w)', '', s)
+    s = re.sub(r"(?<=\w)-\s+(?=\w)", "", s)
     s = s.lower()
-    s = ''.join(
-        c for c in unicodedata.normalize('NFD', s)
-        if unicodedata.category(c) != 'Mn'
+    s = "".join(
+        c
+        for c in unicodedata.normalize("NFD", s)
+        if unicodedata.category(c) != "Mn"
     )
-    s = re.sub(r'\s+', ' ', s).strip()
+    s = re.sub(r"\s+", " ", s).strip()
     return s
+
 
 def _has_exact_phrase(texto: str, frase: str) -> bool:
     """Verifica se frase exata existe no texto."""
     t = _normalize(texto)
     p = _normalize(frase)
-    return re.search(r'\b' + re.escape(p) + r'\b', t) is not None
+    return re.search(r"\b" + re.escape(p) + r"\b", t) is not None
+
 
 def load_config(path: str) -> dict:
     """Carrega configuração do arquivo JSON."""
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def get_token(cfg: dict) -> str:
     """Obtém token de acesso da Microsoft."""
@@ -140,13 +165,15 @@ def get_token(cfg: dict) -> str:
         sys.exit(2)
     return result["access_token"]
 
-def fetch_messages(endpoint: str, token: str, timeout: int = 60,
-                   max_retries: int = 5):
+
+def fetch_messages(
+    endpoint: str, token: str, timeout: int = 60, max_retries: int = 5
+):
     """Busca mensagens do Microsoft Graph API."""
     sess = make_session(max_retries)
     headers = {
         "Authorization": f"Bearer {token}",
-        "Accept": "application/json"
+        "Accept": "application/json",
     }
     url = endpoint
     items = []
@@ -190,10 +217,10 @@ def fetch_messages(endpoint: str, token: str, timeout: int = 60,
             except (
                 requests.exceptions.ReadTimeout,
                 requests.exceptions.ConnectTimeout,
-                requests.exceptions.ConnectionError
+                requests.exceptions.ConnectionError,
             ) as e:
                 if attempt <= max_retries:
-                    wait = min(2 ** attempt, 30)
+                    wait = min(2**attempt, 30)
                     retry_msg = (
                         f"[RETRY] {type(e).__name__}: tentando novamente em "
                         f"{wait}s (tentativa {attempt}/{max_retries})"
@@ -209,6 +236,7 @@ def fetch_messages(endpoint: str, token: str, timeout: int = 60,
                     raise
     return items
 
+
 def list_attachments(user_email, msg_id, token):
     """Lista anexos de uma mensagem."""
     base_url = "https://graph.microsoft.com/v1.0"
@@ -220,13 +248,14 @@ def list_attachments(user_email, msg_id, token):
         return []
     return resp.json().get("value", [])
 
+
 def mark_email_as_read(user_email, msg_id, token):
     """Marca um email como lido."""
     base_url = "https://graph.microsoft.com/v1.0"
     url = f"{base_url}/users/{user_email}/messages/{msg_id}"
     headers = {
         "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
     data = {"isRead": True}
     try:
@@ -234,14 +263,13 @@ def mark_email_as_read(user_email, msg_id, token):
         if resp.status_code == 200:
             return True
         else:
-            warn_msg = (
-                f"[WARN] Falha ao marcar como lido: {resp.status_code}"
-            )
+            warn_msg = f"[WARN] Falha ao marcar como lido: {resp.status_code}"
             safe_print(warn_msg)
             return False
     except Exception as e:
         safe_print(f"[WARN] Erro ao marcar como lido: {e}")
         return False
+
 
 def download_attachment(user_email, msg_id, att_id, token):
     """Baixa um anexo específico."""
@@ -258,37 +286,40 @@ def download_attachment(user_email, msg_id, att_id, token):
         return None, None, None
 
     att = resp.json()
-    if att.get('@odata.type') == '#microsoft.graph.fileAttachment':
-        fname = att.get('name', att_id)
-        ctype = att.get('contentType', '')
+    if att.get("@odata.type") == "#microsoft.graph.fileAttachment":
+        fname = att.get("name", att_id)
+        ctype = att.get("contentType", "")
         import base64
-        content = att['contentBytes']
+
+        content = att["contentBytes"]
         if isinstance(content, str):
             try:
                 data = base64.b64decode(content)
             except Exception:
-                data = content.encode('utf-8')
+                data = content.encode("utf-8")
         else:
             data = content
         return fname, data, ctype
     return None, None, None
 
+
 def safe_name(name: str, fallback_ext: str = "") -> str:
     """Cria nome de arquivo seguro."""
     illegal = r'[\\/:*?"<>|]'
     name = (name or "anexo").strip()
-    base, dot, ext = name.rpartition('.')
+    base, dot, ext = name.rpartition(".")
     if not dot:
-        base, ext = name, fallback_ext.lstrip('.')
+        base, ext = name, fallback_ext.lstrip(".")
     base = re.sub(illegal, "_", base) or "arquivo"
     ext = re.sub(illegal, "", ext.lower())
     full = f"{base}.{ext}" if ext else base
     if len(full) > 120:
-        h = hashlib.sha1(full.encode('utf-8')).hexdigest()[:8]
+        h = hashlib.sha1(full.encode("utf-8")).hexdigest()[:8]
         keep = 120 - (len(ext) + (1 if ext else 0) + 9)
-        base = base[:max(10, keep)]
+        base = base[: max(10, keep)]
         full = f"{base}_{h}.{ext}" if ext else f"{base}_{h}"
     return full
+
 
 def save_bytes(tmp_dir: Path, filename: str, data: bytes) -> Path:
     """Salva bytes em arquivo."""
@@ -298,6 +329,7 @@ def save_bytes(tmp_dir: Path, filename: str, data: bytes) -> Path:
         f.write(data)
     return path
 
+
 def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
     """Extrai texto de qualquer tipo de arquivo."""
     # PDF
@@ -305,6 +337,7 @@ def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
         text = ""
         try:
             from PyPDF2 import PdfReader
+
             reader = PdfReader(io.BytesIO(data))
             for p in reader.pages:
                 text += (p.extract_text() or "") + "\n"
@@ -329,12 +362,15 @@ def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
         return text, False
 
     # DOCX
-    if (fname.lower().endswith(".docx") or
-            "officedocument.wordprocessingml.document" in
-            (ctype or "").lower()):
+    if (
+        fname.lower().endswith(".docx")
+        or "officedocument.wordprocessingml.document" in (ctype or "").lower()
+    ):
         try:
             import tempfile
+
             import docx
+
             with tempfile.NamedTemporaryFile(
                 suffix=".docx", delete=True
             ) as tmp:
@@ -346,8 +382,7 @@ def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
             return "", False
 
     # TXT
-    if (fname.lower().endswith(".txt") or
-            "text/plain" in (ctype or "").lower()):
+    if fname.lower().endswith(".txt") or "text/plain" in (ctype or "").lower():
         try:
             return data.decode("utf-8", errors="ignore"), False
         except Exception:
@@ -355,8 +390,9 @@ def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
 
     # Imagens
     img_extensions = (".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp")
-    if (any(fname.lower().endswith(ext) for ext in img_extensions) or
-            (ctype or "").lower().startswith("image/")):
+    if any(fname.lower().endswith(ext) for ext in img_extensions) or (
+        ctype or ""
+    ).lower().startswith("image/"):
         if HAVE_OCR and Image is not None and pytesseract is not None:
             try:
                 img = Image.open(io.BytesIO(data))
@@ -367,6 +403,7 @@ def extract_text_any(fname: str, ctype: str, data: bytes) -> tuple:
             return "", False
 
     return "", False
+
 
 def get_resume_text(path):
     """Extrai texto de arquivo de currículo."""
@@ -386,25 +423,30 @@ def get_resume_text(path):
         safe_print(f"[WARN] Extensão não suportada para {path}")
         return ""
 
+
 def extract_text_from_pdf(path):
     """Extrai texto de PDF."""
     try:
         from PyPDF2 import PdfReader
+
         reader = PdfReader(path)
         return "\n".join((p.extract_text() or "") for p in reader.pages)
     except Exception:
         safe_print(f"[WARN] Falha ao extrair texto de {path}")
         return ""
 
+
 def extract_text_from_docx(path):
     """Extrai texto de DOCX."""
     try:
         import docx
+
         d = docx.Document(path)
         return "\n".join(p.text for p in d.paragraphs)
     except Exception:
         safe_print(f"[WARN] Falha ao extrair texto de {path}")
         return ""
+
 
 def expand_formacoes(user_terms):
     """Expande termos de formação com sinônimos."""
@@ -417,6 +459,7 @@ def expand_formacoes(user_terms):
                 result.update([normalize_text(s) for s in syns])
     return result
 
+
 def has_formacao_in_text(cv_text, formacoes):
     """Verifica se formação está presente no texto."""
     cv_norm = normalize_text(cv_text)
@@ -425,6 +468,7 @@ def has_formacao_in_text(cv_text, formacoes):
         if term in cv_norm:
             return True
     return False
+
 
 def candidato_aprovado(texto_cv, palavras, formacoes):
     """Determina se candidato deve ser aprovado."""
@@ -445,26 +489,25 @@ def candidato_aprovado(texto_cv, palavras, formacoes):
 
     return True, formacoes_encontradas
 
+
 def teste_formacao():
     """Teste das funcionalidades de formação."""
     textos = [
         "Bacharel em Farmácia pela UFMG...",
         "Graduado em Química Industrial...",
-        "Experiência em laboratório; cursando Biomedicina"
+        "Experiência em laboratório; cursando Biomedicina",
     ]
-    sets = [
-        ["farmácia", "biomedicina"],
-        ["química"]
-    ]
+    sets = [["farmácia", "biomedicina"], ["química"]]
     for idx, formacoes in enumerate(sets, 1):
         safe_print(f"\n[TESTE] Formações: {formacoes}")
         for i, texto in enumerate(textos, 1):
             aprovado, encontrados = candidato_aprovado(texto, [], formacoes)
-            status = 'APROVADO' if aprovado else 'REPROVADO'
+            status = "APROVADO" if aprovado else "REPROVADO"
             encontradas_str = (
-                ', '.join(encontrados) if encontrados else 'nenhuma'
+                ", ".join(encontrados) if encontrados else "nenhuma"
             )
             safe_print(f"CV {i}: {status} | Encontradas: {encontradas_str}")
+
 
 def main():
     """Função principal."""
@@ -474,20 +517,26 @@ def main():
     parser.add_argument("keywords")
     parser.add_argument("negativas", nargs="?", default="")
     parser.add_argument(
-        "--http-timeout", type=int, default=60,
-        help="Timeout de leitura (segundos)"
+        "--http-timeout",
+        type=int,
+        default=60,
+        help="Timeout de leitura (segundos)",
     )
     parser.add_argument(
-        "--max-retries", type=int, default=5,
-        help="Máximo de tentativas em falha de rede"
+        "--max-retries",
+        type=int,
+        default=5,
+        help="Máximo de tentativas em falha de rede",
     )
     parser.add_argument(
-        "--formacoes", default="",
-        help="Lista de formações separadas por vírgula"
+        "--formacoes",
+        default="",
+        help="Lista de formações separadas por vírgula",
     )
     parser.add_argument(
-        "--teste-formacao", action="store_true",
-        help="Executa teste de formação em memória"
+        "--teste-formacao",
+        action="store_true",
+        help="Executa teste de formação em memória",
     )
     args = parser.parse_args()
 
@@ -502,12 +551,13 @@ def main():
         s.strip() for s in (args.formacoes or "").split(",") if s.strip()
     ]
     json_form = [
-        s.strip() for s in (params.get("formacoes", "") or "").split(",")
+        s.strip()
+        for s in (params.get("formacoes", "") or "").split(",")
         if s.strip()
     ]
     formacoes = list(dict.fromkeys(cli_form or json_form))
 
-    formacoes_str = ', '.join(formacoes) if formacoes else 'vazio'
+    formacoes_str = ", ".join(formacoes) if formacoes else "vazio"
     safe_print(f"[INFO] Filtro de formação: {formacoes_str}")
 
     token = get_token(params)
@@ -519,7 +569,7 @@ def main():
         safe_print("[ERRO] Não foi possível extrair user_email do endpoint")
         sys.exit(1)
 
-    vaga_slug = _normalize(args.vaga_desc).replace(' ', '_') or 'vaga'
+    vaga_slug = _normalize(args.vaga_desc).replace(" ", "_") or "vaga"
     base_dir = Path.cwd() / "aprovados" / vaga_slug
     tmp_dir = base_dir / "__tmp"
     base_dir.mkdir(parents=True, exist_ok=True)
@@ -528,9 +578,11 @@ def main():
     positivas = [args.vaga_desc.strip()] + [
         k.strip() for k in args.keywords.split(",") if k.strip()
     ]
-    negativas = [
-        k.strip() for k in args.negativas.split(",") if k.strip()
-    ] if args.negativas else []
+    negativas = (
+        [k.strip() for k in args.negativas.split(",") if k.strip()]
+        if args.negativas
+        else []
+    )
 
     if not HAVE_OCR:
         msg = "[WARN] OCR indisponível. PDFs/Imagens podem ficar sem texto."
@@ -544,8 +596,10 @@ def main():
         safe_print("[INFO] Buscando TODOS os emails")
 
     messages = fetch_messages(
-        endpoint, token, timeout=args.http_timeout,
-        max_retries=args.max_retries
+        endpoint,
+        token,
+        timeout=args.http_timeout,
+        max_retries=args.max_retries,
     )
     safe_print(f"[INFO] emails recebidos: {len(messages)}")
 
@@ -555,8 +609,8 @@ def main():
     formacao_counter = collections.Counter()
 
     for msg in messages:
-        msg_id = msg.get('id')
-        if not msg.get('hasAttachments'):
+        msg_id = msg.get("id")
+        if not msg.get("hasAttachments"):
             continue
 
         atts = list_attachments(user_email, msg_id, token)
@@ -567,11 +621,11 @@ def main():
                 safe_print(f"[SKIP] {att.get('name')} tipo não suportado")
                 continue
 
-            if att.get('@odata.type') != '#microsoft.graph.fileAttachment':
+            if att.get("@odata.type") != "#microsoft.graph.fileAttachment":
                 continue
 
             fname, data, ctype = download_attachment(
-                user_email, msg_id, att['id'], token
+                user_email, msg_id, att["id"], token
             )
             if not fname or not data:
                 continue
@@ -608,12 +662,15 @@ def main():
 
                 formacoes_str_encontradas = (
                     ", ".join(formacoes_encontradas)
-                    if formacoes_encontradas else ""
+                    if formacoes_encontradas
+                    else ""
                 )
-                aprovados_info.append({
-                    "arquivo": target.name,
-                    "formacoes_encontradas": formacoes_str_encontradas
-                })
+                aprovados_info.append(
+                    {
+                        "arquivo": target.name,
+                        "formacoes_encontradas": formacoes_str_encontradas,
+                    }
+                )
                 formacao_counter.update(formacoes_encontradas)
             else:
                 local.unlink(missing_ok=True)
@@ -648,6 +705,6 @@ def main():
     safe_print("[END] triagem ok")
     sys.exit(0)
 
+
 if __name__ == "__main__":
     main()
-

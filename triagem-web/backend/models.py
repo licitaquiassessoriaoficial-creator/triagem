@@ -1,24 +1,43 @@
 """
 Modelos SQLAlchemy para o banco PostgreSQL no Railway
 """
+
+import enum
+
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime, Boolean,
-    Float, JSON, ForeignKey, Enum as SQLEnum
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+)
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import (
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
+
 Base = declarative_base()
+
+
 class JobStatus(enum.Enum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     STOPPED = "stopped"
+
+
 class EmailProvider(enum.Enum):
     GMAIL = "gmail"
     M365 = "m365"
+
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -28,12 +47,12 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     # Relacionamentos
     triagem_jobs = relationship("TriagemJob", back_populates="user")
+
+
 class TriagemJob(Base):
     __tablename__ = "triagem_jobs"
     id = Column(Integer, primary_key=True, index=True)
@@ -69,13 +88,13 @@ class TriagemJob(Base):
     started_at = Column(DateTime(timezone=True))
     completed_at = Column(DateTime(timezone=True))
     updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     # Relacionamentos
     user = relationship("User", back_populates="triagem_jobs")
     candidates = relationship("CandidateResult", back_populates="job")
+
+
 class CandidateResult(Base):
     __tablename__ = "candidate_results"
     id = Column(Integer, primary_key=True, index=True)
@@ -107,12 +126,12 @@ class CandidateResult(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     # Relacionamentos
     job = relationship("TriagemJob", back_populates="candidates")
+
+
 class EmailAccount(Base):
     __tablename__ = "email_accounts"
     id = Column(Integer, primary_key=True, index=True)
@@ -127,8 +146,5 @@ class EmailAccount(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now()
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-
