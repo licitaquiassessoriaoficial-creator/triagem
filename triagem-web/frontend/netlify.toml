@@ -1,0 +1,40 @@
+# Configuração de build para Netlify
+[build]
+  publish = "out"
+  command = "npm run build && npm run export"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+# Configurações de headers para SPA
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Redirecionamentos para SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Configurações de ambiente para diferentes branches
+[context.production.environment]
+  NEXT_PUBLIC_API_URL = "https://triagem-odq-api.railway.app"
+  NEXT_PUBLIC_WS_URL = "wss://triagem-odq-api.railway.app/ws"
+
+[context.deploy-preview.environment]
+  NEXT_PUBLIC_API_URL = "https://staging-triagem-odq-api.railway.app"
+  NEXT_PUBLIC_WS_URL = "wss://staging-triagem-odq-api.railway.app/ws"
+
+[context.branch-deploy.environment]
+  NEXT_PUBLIC_API_URL = "https://dev-triagem-odq-api.railway.app"
+  NEXT_PUBLIC_WS_URL = "wss://dev-triagem-odq-api.railway.app/ws"
+
+# Configurações de função serverless (se necessário)
+[functions]
+  directory = "functions"

@@ -1,0 +1,11 @@
+python-dotenv
+msal
+requests
+pdfminer.six
+python-docx
+textract
+rapidfuzz
+scikit-learn
+tenacity
+tqdm
+pytest
