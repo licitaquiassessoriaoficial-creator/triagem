@@ -153,7 +153,7 @@ async def root():
     """Endpoint raiz - status da API"""
     return StatusResponse(
         status="online",
-        message="Sistema de Triagem ODQ - API funcionando",
+        message="Sistema de Triagem ODQ - API funcionando v2.0",
         timestamp=datetime.now().isoformat()
     )
 
