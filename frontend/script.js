@@ -135,6 +135,7 @@ class TriagemSystem {
         // Usar dados reais do formulário
         const emailAccount = document.getElementById('email').value || 'izabella.cordeiro@odequadroservicos.com.br';
         this.addLogEntry('info', '🔗 Conectando à conta: ' + emailAccount);
+        this.addLogEntry('info', '📧 Processando emails da caixa de entrada: ' + emailAccount);
         await this.sleep(800);
         
         this.updateLoadingMessage('Preparando parâmetros de triagem...');
@@ -151,9 +152,9 @@ class TriagemSystem {
         this.addLogEntry('info', `🔍 OCR para PDFs: ${data.usarOcr ? 'Ativado' : 'Desativado'}`);
         await this.sleep(1000);
         
-        this.updateLoadingMessage('Processando emails do domínio...');
+        this.updateLoadingMessage('Processando emails da conta especificada...');
         this.updateProgress(30);
-        this.addLogEntry('info', '📧 Processando emails do domínio @odequadroservicos.com.br');
+        this.addLogEntry('info', `📧 Analisando caixa de entrada: ${emailAccount}`);
         await this.sleep(1500);
         
         this.updateLoadingMessage('Analisando currículos...');
@@ -191,7 +192,8 @@ class TriagemSystem {
         this.updateProgress(100);
         this.showLoading(false);
         
-        this.addLogEntry('info', '💡 Triagem baseada nos seus parâmetros configurados.');
+        this.addLogEntry('info', '💡 Triagem simulada baseada na conta: ' + emailAccount);
+        this.addLogEntry('info', '✅ Use qualquer email @odequadroservicos.com.br para simular triagem');
         this.addLogEntry('info', '🔄 Para processar emails reais, configure o backend com credenciais válidas.');
     }
     
@@ -401,6 +403,14 @@ class TriagemSystem {
             this.addLogEntry('error', 'Max. Emails deve estar entre 1 e 1000.');
             return false;
         }
+
+        // Validar email do domínio
+        const emailAccount = document.getElementById('email').value;
+        if (emailAccount && !emailAccount.endsWith('@odequadroservicos.com.br')) {
+            this.addLogEntry('error', 'Email deve ser do domínio @odequadroservicos.com.br');
+            return false;
+        }
+        
         return true;
     }
 
