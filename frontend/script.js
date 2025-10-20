@@ -9,6 +9,7 @@ class TriagemSystem {
             : 'https://triagem-production.up.railway.app';
         this.currentJobId = null;
         this.logEntries = [];
+        this.modoOffline = false; // Modo offline/simulação
         this.initializeEventListeners();
         this.initializeTimestamp();
         this.testBackendConnection();
@@ -79,24 +80,137 @@ class TriagemSystem {
     // Testar conexão com backend
     async testBackendConnection() {
         try {
-            const response = await fetch(`${this.API_BASE_URL}/health`);
+            const response = await fetch(`${this.API_BASE_URL}/health`, {
+                method: 'GET',
+                timeout: 5000
+            });
             if (response.ok) {
                 const data = await response.json();
                 this.addLogEntry('info', `✅ Backend conectado: ${data.message}`);
+                this.modoOffline = false;
             } else {
-                this.addLogEntry('warning', '⚠️ Backend não está respondendo corretamente');
+                throw new Error('Backend não respondeu corretamente');
             }
         } catch (error) {
-            this.addLogEntry('error', `❌ Erro ao conectar com backend: ${error.message}`);
+            this.addLogEntry('warning', `⚠️ Backend indisponível - Modo simulação ativado`);
+            this.addLogEntry('info', `📴 Simulando triagem offline para demonstração`);
+            this.modoOffline = true;
         }
     }
 
     // Executar Triagem - Igual ao sistema desktop
     async executarTriagem() {
         this.addLogEntry('info', '🚀 Iniciando Triagem (igual sistema desktop)...');
-        // Redirecionar para triagem email que processa dados reais
-        await this.sleep(500);
-        this.executarTriagemEmail();
+        // Verificar se está no modo offline
+        if (this.modoOffline) {
+            this.addLogEntry('info', '📴 Executando simulação offline');
+            await this.executarTriagemSimulada();
+        } else {
+            // Redirecionar para triagem email que processa dados reais
+            await this.sleep(500);
+            this.executarTriagemEmail();
+        }
+    }
+
+    // Simulação de triagem offline
+    async executarTriagemSimulada() {
+        this.addLogEntry('info', '🎭 MODO SIMULAÇÃO - Demonstração das funcionalidades');
+        
+        const data = this.getFormDataEmail();
+        if (!this.validateFormEmail(data)) return;
+
+        this.showLoading(true);
+        this.updateLoadingMessage('Simulando triagem de currículos...');
+
+        // Simular etapas
+        this.updateProgress(10);
+        this.addLogEntry('info', '🔗 [SIMULAÇÃO] Conectando ao Microsoft Graph...');
+        await this.sleep(1000);
+
+        this.updateProgress(30);
+        this.addLogEntry('info', '📧 [SIMULAÇÃO] Processando emails do domínio @odequadroservicos.com.br');
+        await this.sleep(1500);
+
+        this.updateProgress(50);
+        this.addLogEntry('info', '📎 [SIMULAÇÃO] Encontrados 15 emails com anexos');
+        await this.sleep(1000);
+
+        this.updateProgress(70);
+        this.addLogEntry('info', '🔍 [SIMULAÇÃO] Analisando currículos com OCR...');
+        await this.sleep(1500);
+
+        this.updateProgress(90);
+        this.addLogEntry('info', '✅ [SIMULAÇÃO] Aplicando critérios de triagem...');
+        await this.sleep(1000);
+
+        // Resultado simulado
+        const resultadoSimulado = {
+            success: true,
+            message: "Triagem simulada concluída",
+            total_processados: 15,
+            total_aprovados: 4,
+            percentual_aprovacao: 26.7,
+            arquivos_aprovados: [
+                {
+                    arquivo: "curriculum_joao_silva.pdf",
+                    email_assunto: "Candidatura para vaga de Desenvolvedor",
+                    email_origem: "joao.silva@email.com",
+                    formacoes_encontradas: ["Engenharia de Software", "Ciência da Computação"],
+                    tamanho_texto: 1250,
+                    ocr_usado: true
+                },
+                {
+                    arquivo: "cv_maria_santos.docx",
+                    email_assunto: "Interesse na vaga Python",
+                    email_origem: "maria.santos@email.com",
+                    formacoes_encontradas: ["Sistemas de Informação"],
+                    tamanho_texto: 980,
+                    ocr_usado: false
+                },
+                {
+                    arquivo: "curriculo_pedro_costa.pdf",
+                    email_assunto: "Aplicação para desenvolvedor backend",
+                    email_origem: "pedro.costa@email.com",
+                    formacoes_encontradas: ["Engenharia da Computação"],
+                    tamanho_texto: 1350,
+                    ocr_usado: true
+                },
+                {
+                    arquivo: "cv_ana_oliveira.pdf",
+                    email_assunto: "Vaga de programador",
+                    email_origem: "ana.oliveira@email.com",
+                    formacoes_encontradas: ["Tecnologia em Sistemas"],
+                    tamanho_texto: 1100,
+                    ocr_usado: true
+                }
+            ],
+            detalhes_usuarios: [
+                { email: "rh@odequadroservicos.com.br", name: "RH Geral", emails_count: 8 },
+                { email: "recrutamento@odequadroservicos.com.br", name: "Recrutamento", emails_count: 7 }
+            ]
+        };
+
+        this.updateProgress(100);
+        this.addLogEntry('info', '🎉 [SIMULAÇÃO] Triagem concluída!');
+        this.addLogEntry('info', `📧 Total de currículos processados: ${resultadoSimulado.total_processados}`);
+        this.addLogEntry('info', `✅ Currículos aprovados: ${resultadoSimulado.total_aprovados}`);
+        this.addLogEntry('info', `📊 Taxa de aprovação: ${resultadoSimulado.percentual_aprovacao}%`);
+
+        // Mostrar currículos aprovados
+        this.addLogEntry('info', '📋 Lista de currículos aprovados (simulação):');
+        resultadoSimulado.arquivos_aprovados.forEach((arquivo, index) => {
+            const formacoes = arquivo.formacoes_encontradas.join(', ');
+            this.addLogEntry('info', `✅ ${index + 1}. ${arquivo.arquivo}`);
+            this.addLogEntry('info', `   📚 Formações: ${formacoes}`);
+            this.addLogEntry('info', `   📧 Origem: ${arquivo.email_origem}`);
+        });
+
+        this.addLogEntry('info', '💡 Esta é uma demonstração. O sistema real processaria emails do Microsoft Graph.');
+        
+        setTimeout(() => {
+            this.showLoading(false);
+            this.showResultsEmail(resultadoSimulado);
+        }, 1000);
     }
 
     getFormData() {
@@ -137,13 +251,20 @@ class TriagemSystem {
         }
 
         this.showLoading(true);
-        this.addLogEntry('info', '� Iniciando triagem de emails (sistema desktop)...');
         
-        try {
-            await this.processarTriagemEmail(formData);
-        } catch (error) {
-            this.addLogEntry('error', `❌ Erro na triagem: ${error.message}`);
-            this.showLoading(false);
+        if (this.modoOffline) {
+            this.addLogEntry('info', '📴 Executando triagem em modo simulação...');
+            await this.executarTriagemSimulada();
+        } else {
+            this.addLogEntry('info', '🌐 Iniciando triagem de emails (sistema online)...');
+            try {
+                await this.processarTriagemEmail(formData);
+            } catch (error) {
+                this.addLogEntry('error', `❌ Erro na triagem: ${error.message}`);
+                this.addLogEntry('info', '🔄 Alternando para modo simulação...');
+                this.modoOffline = true;
+                await this.executarTriagemSimulada();
+            }
         }
     }
 
@@ -293,6 +414,19 @@ class TriagemSystem {
     abrirAprovados() {
         this.addLogEntry('info', '📁 Verificando pasta de aprovados...');
         
+        if (this.modoOffline) {
+            // Modo simulação - mostrar arquivos fictícios
+            this.addLogEntry('info', '📴 Modo simulação - Mostrando arquivos de exemplo');
+            this.addLogEntry('info', '✅ Encontrados 4 arquivo(s) aprovado(s):');
+            this.addLogEntry('info', '📄 1. curriculum_joao_silva.pdf (125.3 KB)');
+            this.addLogEntry('info', '📄 2. cv_maria_santos.docx (98.7 KB)');
+            this.addLogEntry('info', '📄 3. curriculo_pedro_costa.pdf (156.8 KB)');
+            this.addLogEntry('info', '📄 4. cv_ana_oliveira.pdf (134.2 KB)');
+            this.addLogEntry('info', '💾 Para baixar, use a funcionalidade de download.');
+            this.addLogEntry('info', '💡 Para ver arquivos reais, configure o backend em modo produção');
+            return;
+        }
+        
         // Fazer chamada para listar aprovados
         fetch(`${this.API_BASE_URL}/aprovados`, {
             headers: {
@@ -315,6 +449,9 @@ class TriagemSystem {
         })
         .catch(error => {
             this.addLogEntry('error', `❌ Erro ao acessar aprovados: ${error.message}`);
+            this.addLogEntry('info', '🔄 Alternando para modo simulação...');
+            this.modoOffline = true;
+            this.abrirAprovados(); // Chamar novamente no modo offline
         });
     }
 
