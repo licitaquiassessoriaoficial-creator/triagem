@@ -5,7 +5,7 @@ class TriagemSystem {
     constructor() {
         // URL dinâmica: local para desenvolvimento, Railway para produção
         this.API_BASE_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:8000' 
+            ? 'http://localhost:8001'  // Backend simples com dados reais
             : 'https://triagem-production.up.railway.app';
         this.currentJobId = null;
         this.logEntries = [];
@@ -76,9 +76,9 @@ class TriagemSystem {
             dataInput.value = `${ano}-${mes}-${dia}`;
         }
 
-        // Mensagem inicial indicando modo simulação
-        this.addLogEntry('info', '🎯 Sistema Triagem ODQ iniciado em modo demonstração.');
-        this.addLogEntry('info', '💡 Todas as funcionalidades disponíveis para teste.');
+        // Mensagem inicial indicando que tentará dados reais
+        this.addLogEntry('info', '🎯 Sistema Triagem ODQ - Tentando dados reais...');
+        this.addLogEntry('info', '💡 Conectando ao Microsoft Graph para dados reais.');
     }
 
     // Testar conexão com backend
@@ -98,8 +98,9 @@ class TriagemSystem {
             if (response.ok) {
                 const data = await response.json();
                 // Teste adicional: verificar se é realmente nosso backend
-                if (data.message && data.message.includes('sistemas funcionando')) {
-                    this.addLogEntry('info', `✅ Backend conectado: ${data.message}`);
+                if (data.message && data.message.includes('Dados reais')) {
+                    this.addLogEntry('info', `✅ Backend REAL conectado: ${data.message}`);
+                    this.addLogEntry('info', `🔥 Sistema processará dados REAIS do Microsoft Graph`);
                     this.modoOffline = false;
                     return true;
                 } else {
@@ -494,11 +495,10 @@ class TriagemSystem {
             this.updateLoadingMessage('Executando triagem de currículos...');
             this.updateProgress(30);
 
-            const response = await fetch(`${this.API_BASE_URL}/triagem-email`, {
+            const response = await fetch(`${this.API_BASE_URL}/triagem-email-real`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer odq-triagem-2024'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(requestData)
             });
