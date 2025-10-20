@@ -1,0 +1,11 @@
+[build]
+  publish = "frontend"
+  command = "echo 'Frontend estático - sem build necessário'"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "18"

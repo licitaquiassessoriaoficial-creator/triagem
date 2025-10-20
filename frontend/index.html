@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Triagem ODQ - Currículos Microsoft 365</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-user-check"></i>
+                    <h1>Sistema de Triagem ODQ</h1>
+                </div>
+                <div class="header-subtitle">
+                    <p>Triagem Automática de Currículos - Microsoft 365</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Configuration Panel -->
+            <div class="panel config-panel">
+                <h2><i class="fas fa-cog"></i> Configuração da Triagem</h2>
+                
+                <form id="triagem-form" class="form-grid">
+                    <!-- Email Configuration -->
+                    <div class="form-group full-width">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Email Microsoft 365:
+                        </label>
+                        <input type="email" id="email" name="email" 
+                               value="izabella.cordeiro@odequadroservicos.com.br"
+                               placeholder="seu.email@empresa.com">
+                    </div>
+
+                    <!-- Job Description -->
+                    <div class="form-group full-width">
+                        <label for="vaga-desc">
+                            <i class="fas fa-briefcase"></i> Descrição da Vaga:
+                        </label>
+                        <input type="text" id="vaga-desc" name="vaga-desc" 
+                               value="Analista de Sistemas"
+                               placeholder="Ex: Analista de Sistemas, Desenvolvedor Python">
+                    </div>
+
+                    <!-- Keywords -->
+                    <div class="form-group full-width">
+                        <label for="keywords">
+                            <i class="fas fa-tags"></i> Palavras-chave (separadas por vírgula):
+                        </label>
+                        <input type="text" id="keywords" name="keywords" 
+                               value="Python, Desenvolvimento, Software, Programação, Backend, API, SQL"
+                               placeholder="Ex: Python, React, API, SQL">
+                    </div>
+
+                    <!-- Formation/Education -->
+                    <div class="form-group full-width">
+                        <label for="formacoes">
+                            <i class="fas fa-graduation-cap"></i> Formações (separadas por vírgula):
+                        </label>
+                        <input type="text" id="formacoes" name="formacoes" 
+                               value="Engenharia, Ciência da Computação, Sistemas, Análise, Tecnologia"
+                               placeholder="Ex: Engenharia, Ciência da Computação, Sistemas">
+                    </div>
+
+                    <!-- Negative Keywords -->
+                    <div class="form-group full-width">
+                        <label for="negativas">
+                            <i class="fas fa-times-circle"></i> Palavras Negativas (separadas por vírgula):
+                        </label>
+                        <input type="text" id="negativas" name="negativas" 
+                               value="estagiário, estágio, trainee, júnior"
+                               placeholder="Ex: estagiário, júnior, trainee">
+                    </div>
+
+                    <!-- Date and Email Options Row -->
+                    <div class="form-group">
+                        <label for="data-filtro">
+                            <i class="fas fa-calendar-alt"></i> Data:
+                        </label>
+                        <input type="date" id="data-filtro" name="data-filtro" 
+                               value="" placeholder="dd/mm/aaaa">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max-emails">
+                            <i class="fas fa-hash"></i> Max. Emails:
+                        </label>
+                        <input type="number" id="max-emails" name="max-emails" 
+                               value="500" min="1" max="1000">
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="form-group full-width">
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="usar-ocr" name="usar-ocr" checked>
+                                <span class="checkmark"></span>
+                                Usar OCR para PDFs e imagens
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-group full-width">
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-play"></i> Executar Triagem
+                            </button>
+                            <button type="button" class="btn btn-success" id="triagem-email">
+                                <i class="fas fa-envelope-open-text"></i> Triagem Email ODQ
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="limpar-form">
+                                <i class="fas fa-undo"></i> Limpar Formulário
+                            </button>
+                            <button type="button" class="btn btn-info" id="abrir-aprovados">
+                                <i class="fas fa-folder-open"></i> Ver Aprovados
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Log Panel -->
+            <div class="panel log-panel">
+                <h2><i class="fas fa-terminal"></i> Log de Execução</h2>
+                <div class="log-container">
+                    <div id="log-output" class="log-output">
+                        <div class="log-entry info">
+                            <span class="timestamp"></span>
+                            <span class="message">Sistema iniciado. Configure os parâmetros e execute a triagem.</span>
+                        </div>
+                    </div>
+                    <div class="log-controls">
+                        <button type="button" class="btn btn-sm" id="limpar-log">
+                            <i class="fas fa-trash"></i> Limpar Log
+                        </button>
+                        <button type="button" class="btn btn-sm" id="download-log">
+                            <i class="fas fa-download"></i> Download Log
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="panel results-panel hidden" id="results-panel">
+                <h2><i class="fas fa-chart-bar"></i> Resultados da Triagem</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-envelope"></i>
+                        <div class="stat-content">
+                            <h3 id="total-emails">0</h3>
+                            <p>Emails Processados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-file-alt"></i>
+                        <div class="stat-content">
+                            <h3 id="total-anexos">0</h3>
+                            <p>Anexos Analisados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="stat-content">
+                            <h3 id="total-aprovados">0</h3>
+                            <p>Aprovados</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-percentage"></i>
+                        <div class="stat-content">
+                            <h3 id="taxa-aprovacao">0%</h3>
+                            <p>Taxa de Aprovação</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-details">
+                    <h3>Detalhes dos Resultados</h3>
+                    <div id="formacoes-encontradas" class="formacoes-list"></div>
+                    <div id="arquivos-aprovados" class="arquivos-list"></div>
+                </div>
+
+                <div class="results-actions">
+                    <button type="button" class="btn btn-success" id="download-aprovados">
+                        <i class="fas fa-download"></i> Download Aprovados
+                    </button>
+                    <button type="button" class="btn btn-info" id="ver-aprovados">
+                        <i class="fas fa-eye"></i> Visualizar Aprovados
+                    </button>
+                    <button type="button" class="btn btn-warning" id="nova-triagem">
+                        <i class="fas fa-redo"></i> Nova Triagem
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="loading-overlay hidden">
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <h3>Processando Triagem...</h3>
+                    <p id="loading-message">Conectando ao Microsoft 365...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="loading-stats">
+                        <span id="loading-stats">Preparando...</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 ODQ Sistemas - Sistema de Triagem de Currículos</p>
+            <p>
+                <a href="https://github.com/licitaquiassessoriaoficial-creator/triagem" target="_blank" rel="noopener">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>

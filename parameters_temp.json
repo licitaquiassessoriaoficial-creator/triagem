@@ -1,0 +1,10 @@
+{
+  "client_id": "dd7304ff-ae79-489c-b8dd-5cec04bc2f67",
+  "authority": "https://login.microsoftonline.com/4028a815-5021-4e1d-a1b6-2d99922c09c1",
+  "secret": "JHS8Q~qS0rOU7wGIijiK_B3FspDmfc5mn50Zgcxm",
+  "scope": [
+    "https://graph.microsoft.com/.default"
+  ],
+  "endpoint": "https://graph.microsoft.com/v1.0/users/izabella.cordeiro@odequadroservicos.com.br/messages?$top=500",
+  "formacoes": "Farmácia"
+}

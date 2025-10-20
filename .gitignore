@@ -74,6 +74,21 @@ build/
 # Azure/Microsoft Graph credentials
 parameters.json
 
+# Project specific directories
+aprovados/
+uploads/
+backend/uploads/
+backend/aprovados/
+
+# Railway
+.railway/
+
+# Netlify
+.netlify/
+
+# Backup files
+*.bak
+
 # Legacy folders (keep original system for reference)
 __Triagem/
 ___All_Errors.txt
