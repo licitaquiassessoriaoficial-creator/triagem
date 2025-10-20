@@ -9,10 +9,10 @@ class TriagemSystem {
             : 'https://triagem-production.up.railway.app';
         this.currentJobId = null;
         this.logEntries = [];
-        this.modoOffline = true; // Inicia em modo offline por padrão - mais estável
+        this.modoOffline = false; // Tentar backend primeiro, fallback para offline
         this.initializeEventListeners();
         this.initializeTimestamp();
-        this.testBackendConnection(); // Tenta conectar, mas sistema já funciona offline
+        this.testBackendConnection(); // Testa backend real com credenciais
     }
 
     initializeEventListeners() {
@@ -120,10 +120,10 @@ class TriagemSystem {
 
     // Executar Triagem - Igual ao sistema desktop
     async executarTriagem() {
-        this.addLogEntry('info', '🚀 Iniciando Triagem (sistema demonstração)...');
-        this.addLogEntry('info', '🎯 Executando simulação com dados realistas');
-        this.modoOffline = true;
-        await this.executarTriagemSimulada();
+        this.addLogEntry('info', '🚀 Iniciando Triagem (sistema completo)...');
+        // Redirecionar para triagem email que usa backend real
+        await this.sleep(500);
+        this.executarTriagemEmail();
     }
 
     // Simulação de triagem offline
@@ -266,11 +266,22 @@ class TriagemSystem {
 
         this.showLoading(true);
         
-        // SEMPRE usar modo simulação - mais estável e confiável
-        this.addLogEntry('info', '🎯 Executando triagem em modo demonstração...');
-        this.addLogEntry('info', '💡 Sistema simulado com resultados realistas');
-        this.modoOffline = true;
-        await this.executarTriagemSimulada();
+        // Verificar se backend está disponível
+        if (this.modoOffline) {
+            this.addLogEntry('info', '📴 Executando triagem em modo simulação...');
+            await this.executarTriagemSimulada();
+        } else {
+            // Tentar usar backend real com credenciais
+            this.addLogEntry('info', '🌐 Tentando triagem com dados reais...');
+            try {
+                await this.processarTriagemEmail(formData);
+            } catch (error) {
+                this.addLogEntry('error', `❌ Erro no backend: ${error.message}`);
+                this.addLogEntry('info', '🔄 Alternando para modo simulação...');
+                this.modoOffline = true;
+                await this.executarTriagemSimulada();
+            }
+        }
     }
 
     getFormDataEmail() {
